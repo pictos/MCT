@@ -26,7 +26,7 @@ public interface ICameraView : IView
 	/// <remarks>
 	/// This property will be <c>null</c> if no camera is selected.
 	/// </remarks>
-	CameraInfo? SelectedCamera { get; internal set; }
+	CameraInfo? SelectedCamera { get; set; }
 
 	/// <summary>
 	/// Gets or sets the current zoom factor of the camera.
@@ -36,7 +36,7 @@ public interface ICameraView : IView
 	/// the value will be coerced to the nearest supported zoom factor.
 	/// If no camera is selected, the value will be set as-is.
 	/// </remarks>
-	float ZoomFactor { get; internal set; }
+	float ZoomFactor { get; set; }
 
 	/// <summary>
 	/// Gets a value indicating whether the camera feature is available on the current device.

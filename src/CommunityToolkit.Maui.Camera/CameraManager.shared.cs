@@ -12,7 +12,7 @@
 /// <param name="onLoaded">The <see cref="Action"/> to execute when the camera is loaded.</param>
 /// <exception cref="NullReferenceException">Thrown when no <see cref="CameraProvider"/> can be resolved.</exception>
 /// <exception cref="InvalidOperationException">Thrown when there are no cameras available.</exception>
-sealed partial class CameraManager(
+public partial class CameraManager(
 	IMauiContext mauiContext,
 	ICameraView cameraView,
 	ICameraProvider cameraProvider,
@@ -132,31 +132,31 @@ sealed partial class CameraManager(
 	/// </summary>
 	/// <param name="token">A <see cref="CancellationToken"/> that can be used to cancel the work.</param>
 	/// <returns>A <see cref="ValueTask"/> that can be awaited.</returns>
-	private partial ValueTask PlatformTakePicture(CancellationToken token);
+	protected virtual  partial ValueTask PlatformTakePicture(CancellationToken token);
 
 	/// <summary>
 	/// Starts the preview from the camera, at the platform-specific level.
 	/// </summary>
 	/// <param name="token">A <see cref="CancellationToken"/> that can be used to cancel the work.</param>
 	/// <returns>A <see cref="Task"/> that can be awaited.</returns>
-	private partial Task PlatformStartCameraPreview(CancellationToken token);
+	protected virtual  partial Task PlatformStartCameraPreview(CancellationToken token);
 
 	/// <summary>
 	/// Connects to the camera, at the platform-specific level.
 	/// </summary>
 	/// <param name="token">A <see cref="CancellationToken"/> that can be used to cancel the work.</param>
 	/// <returns>A <see cref="Task"/> that can be awaited.</returns>
-	private partial Task PlatformConnectCamera(CancellationToken token);
+	protected virtual  partial Task PlatformConnectCamera(CancellationToken token);
 
 	/// <summary>
 	/// Disconnects from the camera, at the platform-specific level.
 	/// </summary>
-	private partial void PlatformDisconnect();
+	protected virtual  partial void PlatformDisconnect();
 
 	/// <summary>
 	/// Stops the preview from the camera, at the platform-specific level.
 	/// </summary>
-	private partial void PlatformStopCameraPreview();
+	protected virtual  partial void PlatformStopCameraPreview();
 
 	/// <summary>
 	/// Starts video recording and writes the recorded data to the specified stream.
@@ -166,7 +166,7 @@ sealed partial class CameraManager(
 	/// <param name="stream">The stream to which the video data will be written. Must be writable and not null.</param>
 	/// <param name="token">A cancellation token that can be used to cancel the video recording operation.</param>
 	/// <returns>A task that represents the asynchronous video recording operation.</returns>
-	private partial Task PlatformStartVideoRecording(Stream stream, CancellationToken token);
+	protected virtual  partial Task PlatformStartVideoRecording(Stream stream, CancellationToken token);
 
 	/// <summary>
 	/// Stops the video recording process asynchronously.
@@ -175,5 +175,5 @@ sealed partial class CameraManager(
 	/// functionality.</remarks>
 	/// <param name="token">A cancellation token that can be used to cancel the stop operation.</param>
 	/// <returns>A task that represents the asynchronous stop operation.</returns>
-	private partial Task<Stream> PlatformStopVideoRecording(CancellationToken token);
+	protected virtual  partial Task<Stream> PlatformStopVideoRecording(CancellationToken token);
 }

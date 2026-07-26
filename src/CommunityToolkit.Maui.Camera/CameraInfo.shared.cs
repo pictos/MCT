@@ -77,7 +77,10 @@ public class CameraInfo(
 #endif
 
 #if IOS || MACCATALYST
-	internal AVCaptureDevice? CaptureDevice { get; } = captureDevice;
+	/// <summary>
+	/// 
+	/// </summary>
+	public AVCaptureDevice? CaptureDevice { get; } = captureDevice;
 	internal IReadOnlyList<AVCaptureDeviceFormat> SupportedFormats { get; } = [.. supportedFormats];
 #endif
 

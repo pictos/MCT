@@ -28,7 +28,10 @@ public partial class CameraViewHandler : ViewHandler<ICameraView, NativePlatform
 	/// </summary>
 	public static CommandMapper<ICameraView, CameraViewHandler> CommandMapper = new(ViewCommandMapper);
 
-	readonly ICameraProvider cameraProvider = IPlatformApplication.Current?.Services.GetRequiredService<ICameraProvider>() ?? throw new CameraException($"{nameof(CameraProvider)} not found");
+	/// <summary>
+	/// 
+	/// </summary>
+	public  ICameraProvider cameraProvider => IPlatformApplication.Current?.Services.GetRequiredService<ICameraProvider>() ?? throw new CameraException($"{nameof(CameraProvider)} not found");
 
 	CameraManager? cameraManager;
 
@@ -51,8 +54,23 @@ public partial class CameraViewHandler : ViewHandler<ICameraView, NativePlatform
 
 	}
 
-	internal CameraManager CameraManager => cameraManager
-		?? throw new InvalidOperationException($"{nameof(CameraManager)} cannot be used until the native view has been created");
+	/// <summary>
+	/// 
+	/// </summary>
+	/// <exception cref="InvalidOperationException"></exception>
+	public CameraManager CameraManager
+	{
+		get => cameraManager ?? throw new InvalidOperationException($"{nameof(CameraManager)} cannot be used until the native view has been created");
+		set
+		{
+			if (cameraManager is null)
+			{
+				cameraManager = value;
+				return;
+			}
+			throw new InvalidOperationException($"{nameof(CameraManager)} has already been set");
+		}
+	}
 
 	/// <inheritdoc/>
 	public void Dispose()
@@ -67,18 +85,25 @@ public partial class CameraViewHandler : ViewHandler<ICameraView, NativePlatform
 	protected override NativePlatformCameraPreviewView CreatePlatformView()
 	{
 		ArgumentNullException.ThrowIfNull(MauiContext);
-		cameraManager = new(MauiContext, VirtualView, cameraProvider, () => Init(VirtualView));
+		cameraManager = new(MauiContext, VirtualView, cameraProvider, () => Init(VirtualView, this));
 
 		return CameraManager.CreatePlatformView();
 
-		// When camera is loaded(switched), map the current flash mode to the platform view,
-		// reset the zoom factor to 1
-		void Init(ICameraView view)
-		{
-			MapCameraFlashMode(this, view);
-			MapIsTorchOn(this, view);
-			view.ZoomFactor = 1.0f;
-		}
+
+	}
+	
+	// When camera is loaded(switched), map the current flash mode to the platform view,
+	// reset the zoom factor to 1
+	/// <summary>
+	/// 
+	/// </summary>
+	/// <param name="view"></param>
+	/// <param name="handler"></param>
+	public static void Init(ICameraView view, CameraViewHandler handler)
+	{
+		MapCameraFlashMode(handler, view);
+		MapIsTorchOn(handler, view);
+		view.ZoomFactor = 1.0f;
 	}
 
 	/// <inheritdoc/>

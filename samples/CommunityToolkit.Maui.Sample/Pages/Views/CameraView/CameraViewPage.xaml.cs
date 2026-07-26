@@ -1,6 +1,17 @@
+#if IOS
+using AVFoundation;
+using CommunityToolkit.Maui.Core.Handlers;
+using Intents;
+using Microsoft.Maui.Handlers;
+#endif
+using System.Diagnostics;
 using CommunityToolkit.Maui.Core;
+using CommunityToolkit.Maui.Core.Handlers;
 using CommunityToolkit.Maui.Sample.ViewModels.Views;
 using CommunityToolkit.Maui.Storage;
+using CoreFoundation;
+using Foundation;
+using UIKit;
 
 namespace CommunityToolkit.Maui.Sample.Pages.Views;
 
@@ -149,6 +160,128 @@ public sealed partial class CameraViewPage : BasePage<CameraViewViewModel>
 			await fileSaver.SaveAsync("recording.mp4", videoRecordingStream);
 			await videoRecordingStream.DisposeAsync();
 			videoRecordingStream = Stream.Null;
+			
 		}
 	}
 }
+
+
+
+public static class InitHandlerCamera
+{
+	public static void INit()
+	{
+		CameraViewHandler.PlatformViewFactory = (h) =>
+		{
+			if (h is not CameraViewHandler handler)
+			{
+				return null!;
+			}
+			
+			var cameraManager = new MyCameraManager(handler.MauiContext!, handler.VirtualView, handler.cameraProvider, () => CameraViewHandler.Init(handler.VirtualView, handler));
+
+			handler.CameraManager = cameraManager;
+
+			return cameraManager.CreatePlatformView();
+
+		};
+	}
+}
+#if IOS
+
+
+sealed class MyCameraManager(IMauiContext mauiContext, ICameraView cameraView, ICameraProvider cameraProvider, Action onLoaded) : CameraManager(mauiContext, cameraView, cameraProvider, onLoaded)
+{
+	readonly MyDelegate metadataDelegate = new();
+	AVCaptureMetadataOutput? captureMetadataOutput;
+	protected override Task PlatformStartVideoRecording(Stream stream, CancellationToken token)
+	{
+		return Task.CompletedTask;
+	}
+
+	protected override async Task PlatformStartCameraPreview(CancellationToken token)
+	{
+		if (captureSession is null)
+		{
+			return;
+		}
+
+		captureSession.BeginConfiguration();
+
+		foreach (var input in captureSession.Inputs)
+		{
+			captureSession.RemoveInput(input);
+			input.Dispose();
+		}
+
+		cameraView.SelectedCamera ??= cameraProvider.AvailableCameras?.FirstOrDefault() ?? throw new CameraException("No camera available on device");
+
+		captureDevice = cameraView.SelectedCamera.CaptureDevice ?? throw new CameraException($"No Camera found");
+		captureInput = new AVCaptureDeviceInput(captureDevice, out NSError? error);
+
+		if (error is null && captureSession.CanAddInput(captureInput))
+		{
+			captureSession.AddInput(captureInput);
+		}
+		else
+		{
+			var errorMessage = error is not null
+				? $"Error creating capture device input: {error.LocalizedDescription}"
+				: "Unable to add capture device input to capture session.";
+
+			captureInput.Dispose();
+			captureInput = null;
+			captureSession.CommitConfiguration();
+			throw new CameraException(errorMessage);
+		}
+
+		
+		captureMetadataOutput = new AVCaptureMetadataOutput();
+		
+		captureSession.AddOutput(captureMetadataOutput);
+
+		captureMetadataOutput.SetDelegate(metadataDelegate, DispatchQueue.MainQueue);
+		var availableTypes = captureMetadataOutput.AvailableMetadataObjectTypes;
+		if ((availableTypes & AVMetadataObjectType.QRCode) != 0)
+		{
+			captureMetadataOutput.MetadataObjectTypes = AVMetadataObjectType.QRCode;
+		}
+		else
+		{
+			Trace.WriteLine($"QRCode metadata is not supported on this device/session. Available: {availableTypes}");
+		}
+		
+		//captureMetadataOutput.MetadataObjectTypes =  AVMetadataObjectType.QRCode;
+		
+		await UpdateCaptureResolution(cameraView.ImageCaptureResolution, token);
+
+		captureSession.CommitConfiguration();
+		captureSession.StartRunning();
+		
+		onLoaded.Invoke();
+
+		
+		 
+	}
+
+	class MyDelegate : AVFoundation.AVCaptureMetadataOutputObjectsDelegate
+	{
+		
+		public override void DidOutputMetadataObjects(AVCaptureMetadataOutput captureOutput, AVMetadataObject[] metadataObjects,
+			AVCaptureConnection connection)
+		{
+			if (metadataObjects.Length is 0)
+			{
+				return;
+			}
+
+			var metadaObj = metadataObjects[0];
+
+			if (metadaObj.Type == AVMetadataObjectType.QRCode)
+			{
+				var value = (metadaObj as AVMetadataMachineReadableCodeObject)?.StringValue;
+			}
+		}
+	}
+}
+#endif

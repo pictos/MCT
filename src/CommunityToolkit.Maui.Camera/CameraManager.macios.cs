@@ -10,17 +10,33 @@ using UIKit;
 
 namespace CommunityToolkit.Maui.Core;
 
+#pragma warning disable CA1063
 partial class CameraManager
 {
 	// TODO: Check if we really need this
 	readonly NSDictionary<NSString, NSObject> codecSettings = new([AVVideo.CodecKey], [new NSString("jpeg")]);
-	AVCaptureDeviceInput? audioInput;
-	AVCaptureDevice? captureDevice;
-	AVCaptureDeviceInput? captureInput;
+	/// <summary>
+	/// 
+	/// </summary>
+	protected AVCaptureDeviceInput? audioInput;
+	/// <summary>
+	/// 
+	/// </summary>
+	protected AVCaptureDevice? captureDevice;
+	/// <summary>
+	/// 
+	/// </summary>
+	protected AVCaptureDeviceInput? captureInput;
 
-	AVCaptureSession? captureSession;
+	/// <summary>
+	/// 
+	/// </summary>
+	protected AVCaptureSession? captureSession;
 
-	AVCaptureFlashMode flashMode;
+	/// <summary>
+	/// 
+	/// </summary>
+	protected AVCaptureFlashMode flashMode;
 
 	IDisposable? orientationDidChangeObserver;
 	AVCapturePhotoOutput? photoOutput;
@@ -68,6 +84,10 @@ partial class CameraManager
 		motionManager = null;
 	}
 
+	/// <summary>
+	/// 
+	/// </summary>
+	/// <returns></returns>
 	public NativePlatformCameraPreviewView CreatePlatformView()
 	{
 		captureSession = new AVCaptureSession
@@ -229,12 +249,12 @@ partial class CameraManager
 			   && dimensions.Height <= resolution.Height;
 	}
 
-	private async partial Task PlatformConnectCamera(CancellationToken token)
+	protected virtual  async partial Task PlatformConnectCamera(CancellationToken token)
 	{
 		await PlatformStartCameraPreview(token);
 	}
 
-	private async partial Task PlatformStartCameraPreview(CancellationToken token)
+	protected virtual  async partial Task PlatformStartCameraPreview(CancellationToken token)
 	{
 		if (captureSession is null)
 		{
@@ -253,6 +273,7 @@ partial class CameraManager
 
 		captureDevice = cameraView.SelectedCamera.CaptureDevice ?? throw new CameraException($"No Camera found");
 		captureInput = new AVCaptureDeviceInput(captureDevice, out NSError? error);
+
 
 		if (error is null && captureSession.CanAddInput(captureInput))
 		{
@@ -291,7 +312,7 @@ partial class CameraManager
 		onLoaded.Invoke();
 	}
 
-	private partial void PlatformStopCameraPreview()
+	protected virtual  partial void PlatformStopCameraPreview()
 	{
 		if (captureSession is null)
 		{
@@ -306,11 +327,11 @@ partial class CameraManager
 		isInitialized = false;
 	}
 
-	private partial void PlatformDisconnect()
+	protected virtual  partial void PlatformDisconnect()
 	{
 	}
 
-	private async partial Task PlatformStartVideoRecording(Stream stream, CancellationToken token)
+	protected virtual  async partial Task PlatformStartVideoRecording(Stream stream, CancellationToken token)
 	{
 		var isPermissionGranted = await AVCaptureDevice.RequestAccessForMediaTypeAsync(AVAuthorizationMediaType.Video).WaitAsync(token);
 		if (!isPermissionGranted)
@@ -381,7 +402,7 @@ partial class CameraManager
 		videoOutput.StartRecordingToOutputFile(outputUrl, new AVCaptureMovieFileOutputRecordingDelegate(videoRecordingFinalizeTcs));
 	}
 
-	private async partial Task<Stream> PlatformStopVideoRecording(CancellationToken token)
+	protected virtual async partial Task<Stream> PlatformStopVideoRecording(CancellationToken token)
 	{
 		if (captureSession is null
 			|| videoRecordingFileName is null
@@ -449,7 +470,7 @@ partial class CameraManager
 		videoRecordingFinalizeTcs = null;
 	}
 
-	private async partial ValueTask PlatformTakePicture(CancellationToken token)
+	protected virtual async partial ValueTask PlatformTakePicture(CancellationToken token)
 	{
 		ArgumentNullException.ThrowIfNull(photoOutput);
 

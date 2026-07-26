@@ -212,7 +212,7 @@ partial class CameraManager
 		_ => (int)SurfaceOrientation.Rotation0
 	};
 
-	private async partial Task PlatformConnectCamera(CancellationToken token)
+	protected virtual  async partial Task PlatformConnectCamera(CancellationToken token)
 	{
 		var cameraProviderFuture = ProcessCameraProvider.GetInstance(context);
 		if (previewView is null)
@@ -368,7 +368,7 @@ partial class CameraManager
 			&& processCameraProvider.IsBound(useCase);
 	}
 
-	private async partial Task PlatformStartCameraPreview(CancellationToken token)
+	protected virtual  async partial Task PlatformStartCameraPreview(CancellationToken token)
 	{
 		if (previewView is null || processCameraProvider is null || cameraPreview is null || imageCapture is null)
 		{
@@ -390,7 +390,7 @@ partial class CameraManager
 		onLoaded.Invoke();
 	}
 
-	private partial void PlatformStopCameraPreview()
+	protected virtual  partial void PlatformStopCameraPreview()
 	{
 		if (processCameraProvider is null)
 		{
@@ -401,11 +401,11 @@ partial class CameraManager
 		isInitialized = false;
 	}
 
-	private partial void PlatformDisconnect()
+	protected virtual  partial void PlatformDisconnect()
 	{
 	}
 
-	private partial ValueTask PlatformTakePicture(CancellationToken token)
+	protected virtual  partial ValueTask PlatformTakePicture(CancellationToken token)
 	{
 		ArgumentNullException.ThrowIfNull(cameraExecutor);
 		ArgumentNullException.ThrowIfNull(imageCallback);
@@ -414,7 +414,7 @@ partial class CameraManager
 		return ValueTask.CompletedTask;
 	}
 
-	private async partial Task PlatformStartVideoRecording(Stream stream, CancellationToken token)
+	protected virtual  async partial Task PlatformStartVideoRecording(Stream stream, CancellationToken token)
 	{
 		if (previewView is null
 			|| processCameraProvider is null
@@ -459,7 +459,7 @@ partial class CameraManager
 		// https://developer.android.com/reference/androidx/camera/video/Recorder#prepareRecording(android.content.Context,androidx.camera.video.MediaStoreOutputOptions)
 	}
 
-	private async partial Task<Stream> PlatformStopVideoRecording(CancellationToken token)
+	protected virtual  async partial Task<Stream> PlatformStopVideoRecording(CancellationToken token)
 	{
 		ArgumentNullException.ThrowIfNull(cameraExecutor);
 		if (videoRecording is null
